@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "scheme": "dairymanagement",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
