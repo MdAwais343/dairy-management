@@ -29,15 +29,23 @@ export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
 
-  // 2-second minimum splash timer on every app startup
+  // Minimum timer so the loader displays smoothly (at least 2.5 seconds)
   const [isMinSplashTimeElapsed, setIsMinSplashTimeElapsed] = useState(false);
+  const [isMaxTimeoutElapsed, setIsMaxTimeoutElapsed] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const minTimer = setTimeout(() => {
       setIsMinSplashTimeElapsed(true);
-    }, 2000);
+    }, 2500);
 
-    return () => clearTimeout(timer);
+    const maxTimer = setTimeout(() => {
+      setIsMaxTimeoutElapsed(true);
+    }, 6000);
+
+    return () => {
+      clearTimeout(minTimer);
+      clearTimeout(maxTimer);
+    };
   }, []);
 
   const [fontsLoaded] = useFonts({
@@ -47,6 +55,7 @@ export default function RootLayout() {
   });
 
   const fetchInitialData = useDairyStore((state) => state.fetchInitialData);
+  const isInitialDataLoaded = useDairyStore((state) => state.isInitialDataLoaded);
   const initAuth = useAuthStore((state) => state.initAuth);
   const isOnboarded = useAuthStore((state) => state.isOnboarded);
   const user = useAuthStore((state) => state.user);
@@ -57,7 +66,12 @@ export default function RootLayout() {
     fetchInitialData();
   }, []);
 
-  const isAppReady = fontsLoaded && !isAuthLoading && isMinSplashTimeElapsed;
+  // App is ready ONLY when fonts are loaded, auth is checked, 2.5s timer passed, AND data is loaded
+  const isAppReady =
+    fontsLoaded &&
+    !isAuthLoading &&
+    isMinSplashTimeElapsed &&
+    (isInitialDataLoaded || isMaxTimeoutElapsed);
 
   // Auth & Onboarding Navigation Guard
   useEffect(() => {
@@ -93,8 +107,8 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: Colors.background },
-          animation: 'fade',
+          contentStyle: { backgroundColor: '#F8FAFC' },
+          animation: 'none',
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false, animation: 'none' }} />

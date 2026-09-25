@@ -201,6 +201,7 @@ interface DairyStore {
   isLoading: boolean;
   isSyncing: boolean;
   isDemoMode: boolean;
+  isInitialDataLoaded: boolean;
 
   // Actions
   fetchInitialData: () => Promise<void>;
@@ -241,9 +242,10 @@ export const useDairyStore = create<DairyStore>((set, get) => ({
   isLoading: false,
   isSyncing: false,
   isDemoMode: !isSupabaseConfigured(),
+  isInitialDataLoaded: false,
 
   fetchInitialData: async () => {
-    set({ isSyncing: true });
+    set({ isSyncing: true, isLoading: true });
     try {
       if (isSupabaseConfigured()) {
         let [customers, pickups, payments, settings] = await Promise.all([
@@ -271,16 +273,17 @@ export const useDairyStore = create<DairyStore>((set, get) => ({
           payments: payments,
           dailyCapacity: settings?.default_capacity || 65.0,
           isDemoMode: false,
+          isInitialDataLoaded: true,
         });
       } else {
         // Run with realistic seed data
-        set({ isDemoMode: true });
+        set({ isDemoMode: true, isInitialDataLoaded: true });
       }
     } catch (e) {
       console.warn('Could not sync with Supabase, running local offline store:', e);
-      set({ isDemoMode: true });
+      set({ isDemoMode: true, isInitialDataLoaded: true });
     } finally {
-      set({ isSyncing: false, isLoading: false });
+      set({ isSyncing: false, isLoading: false, isInitialDataLoaded: true });
     }
   },
 
