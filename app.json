@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "ڈیری مینجمنٹ",
+    "slug": "dairy-management",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "dairymanagement",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#ECFDF5"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#E0F2FE"
+      },
+      "package": "com.dairy.management"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-asset"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
