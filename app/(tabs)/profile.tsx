@@ -134,10 +134,10 @@ export default function FarmProfileScreen() {
             </View>
             <View style={styles.heroTitles}>
               <UrduText size={20} weight="bold" color="#FFFFFF">
-                {ownerProfile?.farm_name || 'ڈیری مینجمنٹ'}
+                {ownerProfile?.farm_name || user?.user_metadata?.farm_name || 'ڈیری مینجمنٹ'}
               </UrduText>
               <UrduText size={14} color="#D1FAE5" style={{ marginTop: 2 }}>
-                {ownerProfile?.owner_name || 'چوہدری عابد حسین'}
+                {ownerProfile?.owner_name || (isDemoLogin ? 'چوہدری عابد حسین' : (user?.user_metadata?.owner_name || user?.email?.split('@')[0] || 'فارم مالک'))}
               </UrduText>
             </View>
           </View>

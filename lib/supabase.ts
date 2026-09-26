@@ -1,8 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppState } from 'react-native';
 import { Customer, DailyPickup, Payment, DairySettings, DairyOwner, SignUpOwnerData } from '../types/database.types';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+// Supabase credentials with production defaults to guarantee connectivity in all builds
+const DEFAULT_SUPABASE_URL = 'https://ipjtxcihgnoxemjrkopj.supabase.co';
+const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwanR4Y2loZ25veGVtanJrb3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNjI0MTcsImV4cCI6MjEwNTkzODQxN30.PHre8JYpbg9SDrZ6jYMKBY0fcF1AAi2mQUjKNJH6J5M';
+
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_KEY;
 
 export const isSupabaseConfigured = (): boolean => {
   return Boolean(
@@ -14,8 +20,26 @@ export const isSupabaseConfigured = (): boolean => {
 };
 
 export const supabase = isSupabaseConfigured()
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        storage: AsyncStorage,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false,
+      },
+    })
   : null;
+
+// Keep Supabase auth tokens fresh when app returns to foreground
+if (supabase) {
+  AppState.addEventListener('change', (state) => {
+    if (state === 'active') {
+      supabase?.auth.startAutoRefresh();
+    } else {
+      supabase?.auth.stopAutoRefresh();
+    }
+  });
+}
 
 // =====================================================================
 // Supabase Auth & Owner Profile Wrappers
@@ -34,6 +58,7 @@ export const authApi = {
           owner_name: data.owner_name,
           farm_name: data.farm_name,
           phone: data.phone,
+          default_capacity: data.default_capacity,
         }
       }
     });
@@ -50,19 +75,23 @@ export const authApi = {
     };
 
     // Insert into dairy_owners profile table
-    const { error: profileError } = await supabase
-      .from('dairy_owners')
-      .upsert(profile);
+    try {
+      const { error: profileError } = await supabase
+        .from('dairy_owners')
+        .upsert(profile);
 
-    if (profileError) {
-      console.warn('Profile table insert warning:', profileError);
+      if (profileError) {
+        console.warn('Profile table insert warning:', profileError);
+      }
+    } catch (e) {
+      console.warn('Profile upsert exception:', e);
     }
 
     return { user: authData.user, profile };
   },
 
   // Sign in existing owner with email and password
-  async signInOwner(email: string, password: string): Promise<{ user: any; profile: DairyOwner | null }> {
+  async signInOwner(email: string, password: string): Promise<{ user: any; profile: DairyOwner }> {
     if (!supabase) throw new Error('Supabase not configured');
 
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -74,7 +103,27 @@ export const authApi = {
     if (!data.user) throw new Error('Login failed');
 
     // Fetch owner profile
-    const profile = await this.getOwnerProfile(data.user.id);
+    let profile = await this.getOwnerProfile(data.user.id);
+    
+    // If not found in table yet, build from user_metadata so real owner name is never lost
+    if (!profile) {
+      const meta = data.user.user_metadata || {};
+      profile = {
+        id: data.user.id,
+        farm_name: meta.farm_name || 'ڈیری مینجمنٹ',
+        owner_name: meta.owner_name || meta.full_name || email.split('@')[0] || 'فارم مالک',
+        phone: meta.phone || '',
+        default_capacity: Number(meta.default_capacity) || 50.0,
+      };
+
+      // Persist into table for future queries
+      try {
+        await supabase.from('dairy_owners').upsert(profile);
+      } catch (upsertErr) {
+        console.warn('Auto-upsert profile on login:', upsertErr);
+      }
+    }
+
     return { user: data.user, profile };
   },
 
@@ -82,17 +131,22 @@ export const authApi = {
   async getOwnerProfile(userId: string): Promise<DairyOwner | null> {
     if (!supabase) return null;
 
-    const { data, error } = await supabase
-      .from('dairy_owners')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('dairy_owners')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    if (error) {
-      console.log('Error fetching owner profile:', error.message);
+      if (error) {
+        console.log('Error fetching owner profile:', error.message);
+        return null;
+      }
+      return data;
+    } catch (e) {
+      console.log('Exception in getOwnerProfile:', e);
       return null;
     }
-    return data;
   },
 
   // Update dairy owner profile

@@ -48,11 +48,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (isSupabaseConfigured() && supabase) {
         const session = await authApi.getSession();
         if (session?.user) {
-          const profile = await authApi.getOwnerProfile(session.user.id);
-          await storage.setDemoUser(null);
-          if (profile) {
-            await storage.setOwnerProfile(profile);
+          let profile = await authApi.getOwnerProfile(session.user.id);
+          if (!profile) {
+            const meta = session.user.user_metadata || {};
+            profile = {
+              id: session.user.id,
+              farm_name: meta.farm_name || 'ڈیری مینجمنٹ',
+              owner_name: meta.owner_name || meta.full_name || session.user.email?.split('@')[0] || 'فارم مالک',
+              phone: meta.phone || '',
+              default_capacity: Number(meta.default_capacity) || 50.0,
+            };
+            try {
+              await supabase.from('dairy_owners').upsert(profile);
+            } catch (e) {
+              console.warn('Auto-upsert on initAuth:', e);
+            }
           }
+          await storage.setDemoUser(null);
+          await storage.setOwnerProfile(profile);
           set({
             isOnboarded: onboarded,
             user: session.user,
@@ -65,11 +78,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
 
-      // 2. Only if no live Supabase session, check for local demo user
-      const savedDemoUser = await storage.getDemoUser();
+      // 2. Check for locally saved real owner profile
       const savedProfile = await storage.getOwnerProfile();
+      const savedDemoUser = await storage.getDemoUser();
 
-      if (savedDemoUser) {
+      // If user had a real registered profile (not demo):
+      if (savedProfile && savedProfile.id !== DEFAULT_DEMO_OWNER.id) {
+        set({
+          isOnboarded: onboarded,
+          user: savedDemoUser || { id: savedProfile.id, email: `${savedProfile.phone || 'owner'}@farm.com` },
+          ownerProfile: savedProfile,
+          isDemoLogin: false,
+          isInitialLoading: false,
+          isLoading: false,
+        });
+        return;
+      }
+
+      // 3. Only if explicitly logged into demo
+      if (savedDemoUser && savedDemoUser.id === DEFAULT_DEMO_OWNER.id) {
         set({
           isOnboarded: onboarded,
           user: savedDemoUser,
@@ -119,8 +146,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Immediately fetch live cloud data for the logged-in owner
         useDairyStore.getState().fetchInitialData();
       } else {
-        // Fallback demo login if supabase keys not configured
-        await get().demoLogin();
+        // Offline / local login without Supabase
+        const savedProfile = await storage.getOwnerProfile();
+        if (savedProfile && savedProfile.id !== DEFAULT_DEMO_OWNER.id) {
+          await storage.setDemoUser(null);
+          set({
+            user: { id: savedProfile.id, email },
+            ownerProfile: savedProfile,
+            isDemoLogin: false,
+            isLoading: false,
+          });
+        } else {
+          const ownerName = email.split('@')[0];
+          const localProfile: DairyOwner = {
+            id: `owner-${Date.now()}`,
+            farm_name: 'ڈیری مینجمنٹ',
+            owner_name: ownerName,
+            phone: '',
+            default_capacity: 50.0,
+          };
+          await storage.setOwnerProfile(localProfile);
+          await storage.setDemoUser(null);
+          set({
+            user: { id: localProfile.id, email },
+            ownerProfile: localProfile,
+            isDemoLogin: false,
+            isLoading: false,
+          });
+        }
+        triggerHaptic.success();
       }
     } catch (error) {
       set({ isLoading: false });
