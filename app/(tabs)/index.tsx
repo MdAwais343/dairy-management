@@ -461,7 +461,7 @@ export default function DailyTakeawayScreen() {
             </UrduText>
           </View>
         }
-        contentContainerStyle={{ paddingBottom: 30 }}
+        contentContainerStyle={{ paddingBottom: 110 }}
       />
 
       {/* Daily Capacity Modal */}

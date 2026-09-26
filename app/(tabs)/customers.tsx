@@ -332,7 +332,7 @@ export default function CustomersScreen() {
             </TouchableOpacity>
           );
         }}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 110 }}
       />
 
       {/* Add / Edit Customer Modal */}

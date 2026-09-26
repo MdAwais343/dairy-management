@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 110,
   },
   heroCard: {
     backgroundColor: Colors.primary,

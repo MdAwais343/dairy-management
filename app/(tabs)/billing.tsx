@@ -403,7 +403,7 @@ export default function BillingScreen() {
             </View>
           );
         }}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 110 }}
       />
 
       {/* Payment Log Modal */}
