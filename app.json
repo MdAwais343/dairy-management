@@ -21,7 +21,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#E0F2FE"
       },
-      "package": "com.dairy.management"
+      "package": "com.dairymanagement.pk"
     },
     "web": {
       "bundler": "metro"
