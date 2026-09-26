@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS dairy_owners (
 ALTER TABLE dairy_owners ENABLE ROW LEVEL SECURITY;
 
 -- Clean up any conflicting existing policies
+DROP POLICY IF EXISTS "Allow anon read/write on dairy_owners" ON dairy_owners;
 DROP POLICY IF EXISTS "Owners can manage own profile" ON dairy_owners;
 DROP POLICY IF EXISTS "Allow service/authenticated insert" ON dairy_owners;
 DROP POLICY IF EXISTS "Allow public insert on dairy_owners" ON dairy_owners;
@@ -22,10 +23,8 @@ DROP POLICY IF EXISTS "Allow public select on dairy_owners" ON dairy_owners;
 DROP POLICY IF EXISTS "Allow public update on dairy_owners" ON dairy_owners;
 DROP POLICY IF EXISTS "Allow all for authenticated users" ON dairy_owners;
 
--- Allow public/authenticated insert, select and update so registration succeeds seamlessly
-CREATE POLICY "Allow public insert on dairy_owners" ON dairy_owners FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public select on dairy_owners" ON dairy_owners FOR SELECT USING (true);
-CREATE POLICY "Allow public update on dairy_owners" ON dairy_owners FOR UPDATE USING (true);
+-- Allow public/authenticated insert, select and update (including UPSERT) so registration succeeds seamlessly
+CREATE POLICY "Allow anon read/write on dairy_owners" ON dairy_owners FOR ALL USING (true) WITH CHECK (true);
 
 -- Trigger to automatically create dairy_owner row on user sign-up
 CREATE OR REPLACE FUNCTION public.handle_new_dairy_owner()

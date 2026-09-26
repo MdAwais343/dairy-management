@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Linking,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../constants/theme';
@@ -83,6 +84,7 @@ export default function CustomerDetailScreen() {
   };
 
   const hasDue = ledger.balance_due > 0;
+  const initialChar = customer.name.trim().charAt(0) || 'گ';
 
   return (
     <View style={styles.container}>
@@ -91,15 +93,32 @@ export default function CustomerDetailScreen() {
         <View style={styles.profileCard}>
           <View style={styles.profileTopRow}>
             <View style={styles.avatar}>
-              <Ionicons name="person" size={24} color="#FFFFFF" />
+              <UrduText size={18} weight="bold" color="#FFFFFF">
+                {initialChar}
+              </UrduText>
             </View>
             <View style={styles.nameBlock}>
               <UrduText size={20} weight="bold" color={Colors.textDark}>
                 {customer.name}
               </UrduText>
-              <UrduText size={13} color={Colors.textMuted}>
-                {customer.phone}
-              </UrduText>
+              <View style={styles.phoneWithCallRow}>
+                <TouchableOpacity
+                  style={styles.directCallBtn}
+                  onPress={() => {
+                    triggerHaptic.selection();
+                    Linking.openURL(`tel:${customer.phone}`);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="call" size={12} color={Colors.primary} />
+                  <UrduText size={11} color={Colors.primary} weight="bold" style={{ marginRight: 3 }}>
+                    کال کریں
+                  </UrduText>
+                </TouchableOpacity>
+                <UrduText size={13} color={Colors.textMuted}>
+                  {customer.phone}
+                </UrduText>
+              </View>
             </View>
             <View
               style={[
@@ -358,6 +377,22 @@ const styles = StyleSheet.create({
   nameBlock: {
     flex: 1,
     alignItems: 'flex-end',
+  },
+  phoneWithCallRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 3,
+  },
+  directCallBtn: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    backgroundColor: Colors.primarySoft,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
   badge: {
     paddingHorizontal: 10,

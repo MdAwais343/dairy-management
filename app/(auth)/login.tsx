@@ -19,6 +19,34 @@ import { triggerHaptic } from '../../lib/haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { DairyFarmIllustration } from '../../components/DairyFarmIllustration';
 
+export const getUrduAuthErrorMessage = (error: any): string => {
+  const msg = (error?.message || '').toLowerCase();
+  
+  if (msg.includes('invalid login credentials') || msg.includes('invalid credentials')) {
+    return 'یہ ای میل یا پاس ورڈ درست نہیں ہے، یا اس ای میل پر کوئی اکاؤنٹ موجود نہیں ہے۔ اگر آپ کا اکاؤنٹ نہیں ہے تو نیچے "نیا اکاؤنٹ رجسٹر کریں" پر کلک کریں۔';
+  }
+  if (msg.includes('user not found')) {
+    return 'اس ای میل پر کوئی اکاؤنٹ رجسٹرڈ نہیں ہے۔ برائے مہربانی پہلے "نیا اکاؤنٹ رجسٹر کریں" پر کلک کریں۔';
+  }
+  if (msg.includes('email not confirmed')) {
+    return 'آپ کی ای میل کی تصدیق ابھی باقی ہے۔ برائے مہربانی اپنی ای میل ان باکس چیک کریں۔';
+  }
+  if (msg.includes('user already registered') || msg.includes('already exists')) {
+    return 'اس ای میل پر اکاؤنٹ پہلے سے موجود ہے۔ برائے مہربانی لاگ ان کریں۔';
+  }
+  if (msg.includes('password') && (msg.includes('least') || msg.includes('short'))) {
+    return 'پاس ورڈ کم از کم 6 ہندسوں پر مشتمل ہونا ضروری ہے۔';
+  }
+  if (msg.includes('network') || msg.includes('failed to fetch') || msg.includes('internet')) {
+    return 'انٹرنیٹ کنکشن میں مسئلہ ہے۔ برائے مہربانی انٹرنیٹ چیک کر کے دوبارہ کوشش کریں۔';
+  }
+  if (msg.includes('rate limit') || msg.includes('too many requests')) {
+    return 'بہت زیادہ بار کوشش کی گئی ہے۔ برائے مہربانی چند منٹ بعد دوبارہ کوشش کریں۔';
+  }
+
+  return error?.message || 'لاگ ان کرنے میں ناکامی۔ برائے مہربانی ای میل اور پاس ورڈ دوبارہ چیک کریں۔';
+};
+
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -47,7 +75,7 @@ export default function LoginScreen() {
       emailRef.current?.shake();
       isValid = false;
     } else if (!trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
-      setEmailError('درست ای میل ایڈریس درج کریں۔');
+      setEmailError('درست ای میل ایڈریس درج کریں۔ (مثال: owner@farm.com)');
       emailRef.current?.shake();
       isValid = false;
     }
@@ -75,10 +103,11 @@ export default function LoginScreen() {
       await login(email.trim(), password);
       // Navigation guard in root layout will redirect to (tabs)
     } catch (err: any) {
-      const errMsg = err?.message || 'لاگ ان کرنے میں ناکامی۔ برائے مہربانی ای میل اور پاس ورڈ چیک کریں۔';
+      const errMsg = getUrduAuthErrorMessage(err);
       setGeneralError(errMsg);
       emailRef.current?.shake();
       passwordRef.current?.shake();
+      Alert.alert('لاگ ان میں خرابی', errMsg);
     } finally {
       setIsSubmitting(false);
     }

@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -16,6 +17,7 @@ import { ShakeableInput, ShakeableInputRef } from '../../components/ShakeableInp
 import { useAuthStore } from '../../store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import { DairyFarmIllustration } from '../../components/DairyFarmIllustration';
+import { getUrduAuthErrorMessage } from './login';
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -103,7 +105,9 @@ export default function SignUpScreen() {
       });
       // Navigation guard in root layout will redirect to (tabs)
     } catch (err: any) {
-      setGeneralError(err?.message || 'اکاؤنٹ بنانے میں مسئلہ پیش آیا ہے۔');
+      const errMsg = getUrduAuthErrorMessage(err);
+      setGeneralError(errMsg);
+      Alert.alert('رجسٹریشن میں خرابی', errMsg);
     } finally {
       setIsSubmitting(false);
     }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { Colors } from '../constants/theme';
 import { UrduText } from './UrduText';
 import { UrduStrings } from '../constants/urduStrings';
@@ -34,6 +34,7 @@ export const CustomerPickupCard: React.FC<CustomerPickupCardProps> = ({
 
   const currentRate = customer.price_per_liter;
   const totalPrice = Math.round(liters * currentRate);
+  const initialChar = customer.name.trim().charAt(0) || 'گ';
 
   const handleDecrease = () => {
     if (liters <= 0.5) return;
@@ -55,7 +56,32 @@ export const CustomerPickupCard: React.FC<CustomerPickupCardProps> = ({
     }
   };
 
+  const handleAddQuick = (amount: number) => {
+    triggerHaptic.selection();
+    const newLiters = Number((liters + amount).toFixed(1));
+    setLiters(newLiters);
+    if (isDelivered) {
+      onUpdateLiters(customer.id, newLiters);
+    }
+  };
+
+  const handleResetToDefault = () => {
+    triggerHaptic.selection();
+    setLiters(customer.default_liters);
+    if (isDelivered) {
+      onUpdateLiters(customer.id, customer.default_liters);
+    }
+  };
+
+  const handleCall = () => {
+    triggerHaptic.selection();
+    if (customer.phone) {
+      Linking.openURL(`tel:${customer.phone}`);
+    }
+  };
+
   const handleToggle = () => {
+    triggerHaptic.medium();
     onTogglePickup(customer.id, liters);
   };
 
@@ -66,38 +92,59 @@ export const CustomerPickupCard: React.FC<CustomerPickupCardProps> = ({
         isDelivered ? styles.cardDelivered : styles.cardPending
       ]}
     >
-      {/* Header Row: Customer Name, Phone & Badge */}
+      {/* Header Row: Customer Initial Avatar, Name, Phone & Quick Call */}
       <View style={styles.headerRow}>
-        <View style={styles.nameBlock}>
-          <UrduText size={18} weight="bold" color={isDelivered ? Colors.successDark : Colors.textDark}>
-            {customer.name}
-          </UrduText>
-          <View style={styles.phoneRow}>
-            <Ionicons name="call-outline" size={13} color={Colors.textMuted} />
-            <UrduText size={12} color={Colors.textMuted} style={{ marginRight: 4 }}>
-              {customer.phone}
+        <View style={styles.avatarAndName}>
+          <View style={[styles.avatar, isDelivered ? styles.avatarDelivered : styles.avatarPending]}>
+            {isDelivered ? (
+              <Ionicons name="checkmark-sharp" size={18} color="#FFFFFF" />
+            ) : (
+              <UrduText size={16} weight="bold" color="#FFFFFF">
+                {initialChar}
+              </UrduText>
+            )}
+          </View>
+          <View style={styles.nameBlock}>
+            <UrduText size={17} weight="bold" color={isDelivered ? Colors.successDark : Colors.textDark}>
+              {customer.name}
             </UrduText>
+            <View style={styles.phoneRow}>
+              <Ionicons name="call-outline" size={12} color={Colors.textMuted} />
+              <UrduText size={12} color={Colors.textMuted} style={{ marginRight: 3 }}>
+                {customer.phone}
+              </UrduText>
+            </View>
           </View>
         </View>
 
-        {/* Customer Type Badge */}
-        <View 
-          style={[
-            styles.badge, 
-            customer.customer_type === 'spot' 
-              ? styles.spotBadge 
-              : styles.khataBadge
-          ]}
-        >
-          <UrduText 
-            size={11} 
-            weight="medium" 
-            color={customer.customer_type === 'spot' ? '#92400E' : Colors.primary}
+        {/* Quick Contact & Customer Type */}
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.quickCallBtn}
+            onPress={handleCall}
+            activeOpacity={0.7}
           >
-            {customer.customer_type === 'spot' 
-              ? UrduStrings.customerTypes.spotShort 
-              : UrduStrings.customerTypes.khataShort}
-          </UrduText>
+            <Ionicons name="call" size={14} color={Colors.primary} />
+          </TouchableOpacity>
+
+          <View 
+            style={[
+              styles.badge, 
+              customer.customer_type === 'spot' 
+                ? styles.spotBadge 
+                : styles.khataBadge
+            ]}
+          >
+            <UrduText 
+              size={11} 
+              weight="bold" 
+              color={customer.customer_type === 'spot' ? '#92400E' : Colors.primary}
+            >
+              {customer.customer_type === 'spot' 
+                ? UrduStrings.customerTypes.spotShort 
+                : UrduStrings.customerTypes.khataShort}
+            </UrduText>
+          </View>
         </View>
       </View>
 
@@ -106,7 +153,7 @@ export const CustomerPickupCard: React.FC<CustomerPickupCardProps> = ({
         {/* Stepper Controls [-] 2.0 L [+] */}
         <View style={styles.stepperContainer}>
           <TouchableOpacity
-            style={[styles.stepperBtn, styles.decrementBtn, liters <= 0.5 && styles.btnDisabled]}
+            style={[styles.stepperBtn, liters <= 0.5 && styles.btnDisabled]}
             onPress={handleDecrease}
             disabled={liters <= 0.5}
             activeOpacity={0.6}
@@ -124,7 +171,7 @@ export const CustomerPickupCard: React.FC<CustomerPickupCardProps> = ({
           </View>
 
           <TouchableOpacity
-            style={[styles.stepperBtn, styles.incrementBtn]}
+            style={styles.stepperBtn}
             onPress={handleIncrease}
             activeOpacity={0.6}
           >
@@ -135,17 +182,64 @@ export const CustomerPickupCard: React.FC<CustomerPickupCardProps> = ({
         {/* Calculated Price Preview */}
         <View style={styles.pricePreviewBlock}>
           <UrduText size={11} color={Colors.textMuted}>
-            {UrduStrings.daily.calculatedAmount} ({currentRate}/L)
+            حساب ({currentRate} روپے/L)
           </UrduText>
           <View style={styles.priceValueRow}>
-            <UrduText size={18} weight="bold" color={Colors.primary}>
+            <UrduText size={18} weight="bold" color={isDelivered ? Colors.successDark : Colors.primary}>
               {totalPrice.toLocaleString('en-US')}
             </UrduText>
-            <UrduText size={12} weight="medium" color={Colors.primary} style={{ marginRight: 3 }}>
+            <UrduText size={12} weight="bold" color={isDelivered ? Colors.successDark : Colors.primary} style={{ marginRight: 3 }}>
               {UrduStrings.daily.rupeesUnit}
             </UrduText>
           </View>
         </View>
+      </View>
+
+      {/* Quick Liters Preset Pills: Reset to Default, +0.5L, +1L */}
+      <View style={styles.presetsRow}>
+        <TouchableOpacity
+          style={[styles.presetChip, liters === customer.default_liters && styles.presetChipActive]}
+          onPress={handleResetToDefault}
+          activeOpacity={0.7}
+        >
+          <UrduText
+            size={11}
+            weight={liters === customer.default_liters ? 'bold' : 'medium'}
+            color={liters === customer.default_liters ? Colors.primary : Colors.textMuted}
+          >
+            معمول ({customer.default_liters} L)
+          </UrduText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.presetChip}
+          onPress={() => handleAddQuick(0.5)}
+          activeOpacity={0.7}
+        >
+          <UrduText size={11} weight="medium" color={Colors.textDark}>
+            + 0.5 L
+          </UrduText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.presetChip}
+          onPress={() => handleAddQuick(1.0)}
+          activeOpacity={0.7}
+        >
+          <UrduText size={11} weight="medium" color={Colors.textDark}>
+            + 1.0 L
+          </UrduText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.presetChip}
+          onPress={() => handleAddQuick(2.0)}
+          activeOpacity={0.7}
+        >
+          <UrduText size={11} weight="medium" color={Colors.textDark}>
+            + 2.0 L
+          </UrduText>
+        </TouchableOpacity>
       </View>
 
       {/* Action Button: Single-tap confirmation */}
@@ -155,18 +249,18 @@ export const CustomerPickupCard: React.FC<CustomerPickupCardProps> = ({
           isDelivered ? styles.actionDeliveredBtn : styles.actionPendingBtn
         ]}
         onPress={handleToggle}
-        activeOpacity={0.8}
+        activeOpacity={0.85}
       >
         <Ionicons 
           name={isDelivered ? "checkmark-circle" : "water"} 
-          size={18} 
+          size={19} 
           color="#FFFFFF" 
           style={{ marginLeft: 6 }} 
         />
-        <UrduText size={15} weight="bold" color="#FFFFFF">
+        <UrduText size={14} weight="bold" color="#FFFFFF">
           {isDelivered 
-            ? UrduStrings.daily.pickupGiven 
-            : UrduStrings.daily.notGivenYet}
+            ? `دودھ دے دیا گیا ✓ (${liters.toFixed(1)} لیٹر - ${totalPrice.toLocaleString()} روپے)`
+            : `دودھ فراہم کریں (${liters.toFixed(1)} لیٹر - ${totalPrice.toLocaleString()} روپے)`}
         </UrduText>
       </TouchableOpacity>
     </View>
@@ -176,19 +270,19 @@ export const CustomerPickupCard: React.FC<CustomerPickupCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
-    padding: 14,
+    padding: 13,
     marginHorizontal: 12,
-    marginBottom: 12,
+    marginBottom: 11,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowRadius: 5,
     elevation: 2,
     borderWidth: 1.5,
   },
   cardPending: {
-    backgroundColor: Colors.card,
-    borderColor: Colors.border,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
   },
   cardDelivered: {
     backgroundColor: '#F0FDF4',
@@ -197,23 +291,56 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 10,
   },
-  nameBlock: {
+  avatarAndName: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
     flex: 1,
+    gap: 10,
+  },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarPending: {
+    backgroundColor: Colors.primary,
+  },
+  avatarDelivered: {
+    backgroundColor: Colors.success,
+  },
+  nameBlock: {
     alignItems: 'flex-end',
+    flex: 1,
   },
   phoneRow: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
     marginTop: 2,
   },
+  headerActions: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 6,
+  },
+  quickCallBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: Colors.primarySoft,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 10,
-    marginLeft: 6,
+    borderRadius: 8,
   },
   spotBadge: {
     backgroundColor: '#FEF3C7',
@@ -229,45 +356,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
     padding: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    marginBottom: 12,
+    borderColor: '#E2E8F0',
+    marginBottom: 8,
     gap: 6,
   },
   stepperContainer: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 3,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#CBD5E1',
   },
   stepperBtn: {
     width: 34,
     height: 34,
     borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
-  decrementBtn: {},
-  incrementBtn: {},
   btnDisabled: {
-    opacity: 0.4,
+    opacity: 0.35,
   },
   litersDisplay: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     alignItems: 'center',
-    minWidth: 48,
+    minWidth: 50,
   },
   pricePreviewBlock: {
     alignItems: 'flex-start',
@@ -278,11 +398,31 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     marginTop: 2,
   },
+  presetsRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    rowGap: 6,
+    marginBottom: 10,
+  },
+  presetChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  presetChipActive: {
+    backgroundColor: Colors.primarySoft,
+    borderColor: '#93C5FD',
+  },
   actionButton: {
     flexDirection: 'row-reverse',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 11,
+    paddingVertical: 12,
     borderRadius: 12,
   },
   actionPendingBtn: {
@@ -290,5 +430,5 @@ const styles = StyleSheet.create({
   },
   actionDeliveredBtn: {
     backgroundColor: Colors.success,
-  }
+  },
 });

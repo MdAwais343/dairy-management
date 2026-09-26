@@ -110,7 +110,13 @@ export default function BillingScreen() {
             <Ionicons name="receipt" size={20} color="#FFFFFF" />
           </View>
           <View style={styles.titleColumn}>
-            <UrduText size={19} weight="bold" color={Colors.primary} numberOfLines={1}>
+            <UrduText
+              size={19}
+              weight="bold"
+              color={Colors.primary}
+              numberOfLines={1}
+              style={{ paddingTop: 3, paddingBottom: 2 }}
+            >
               {UrduStrings.billing.title}
             </UrduText>
             <UrduText size={11} color={Colors.textMuted} numberOfLines={1}>
@@ -242,21 +248,28 @@ export default function BillingScreen() {
 
           return (
             <View style={styles.ledgerCard}>
-              {/* Card Top: Customer Name, Phone & Type */}
+              {/* Card Top: Customer Avatar, Name, Phone & Type */}
               <View style={styles.cardHeader}>
-                <View style={styles.customerNameBlock}>
-                  <TouchableOpacity
-                    onPress={() => router.push(`/customer/${item.customer_id}`)}
-                    style={styles.nameWithIcon}
-                  >
-                    <UrduText size={17} weight="bold" color={Colors.textDark}>
-                      {item.name}
+                <View style={styles.avatarAndName}>
+                  <View style={[styles.avatar, item.customer_type === 'spot' ? styles.avatarSpot : styles.avatarKhata]}>
+                    <UrduText size={16} weight="bold" color="#FFFFFF">
+                      {item.name.trim().charAt(0) || 'گ'}
                     </UrduText>
-                    <Ionicons name="chevron-back" size={16} color={Colors.textMuted} style={{ marginLeft: 4 }} />
-                  </TouchableOpacity>
-                  <UrduText size={12} color={Colors.textMuted}>
-                    {item.phone} • {item.price_per_liter} روپے/L
-                  </UrduText>
+                  </View>
+                  <View style={styles.customerNameBlock}>
+                    <TouchableOpacity
+                      onPress={() => router.push(`/customer/${item.customer_id}`)}
+                      style={styles.nameWithIcon}
+                    >
+                      <UrduText size={17} weight="bold" color={Colors.textDark}>
+                        {item.name}
+                      </UrduText>
+                      <Ionicons name="chevron-back" size={15} color={Colors.textMuted} style={{ marginLeft: 3 }} />
+                    </TouchableOpacity>
+                    <UrduText size={12} color={Colors.textMuted}>
+                      {item.phone} • {item.price_per_liter} روپے/L
+                    </UrduText>
+                  </View>
                 </View>
 
                 {/* Badge */}
@@ -413,20 +426,27 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingTop: 12,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    minHeight: 64,
   },
   headerRight: {
     flex: 1,
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   titleColumn: {
     flex: 1,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   headerIcon: {
     width: 38,
@@ -507,8 +527,27 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 12,
+  },
+  avatarAndName: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    flex: 1,
+    gap: 10,
+  },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarKhata: {
+    backgroundColor: Colors.primary,
+  },
+  avatarSpot: {
+    backgroundColor: '#D97706',
   },
   customerNameBlock: {
     flex: 1,

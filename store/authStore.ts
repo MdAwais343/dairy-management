@@ -8,6 +8,7 @@ interface AuthState {
   isOnboarded: boolean;
   user: any | null;
   ownerProfile: DairyOwner | null;
+  isInitialLoading: boolean;
   isLoading: boolean;
   isDemoLogin: boolean;
 
@@ -33,12 +34,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isOnboarded: false,
   user: null,
   ownerProfile: null,
-  isLoading: true,
+  isInitialLoading: true,
+  isLoading: false,
   isDemoLogin: false,
 
   initAuth: async () => {
     try {
-      set({ isLoading: true });
+      set({ isInitialLoading: true });
       const onboarded = await storage.getOnboardingCompleted();
       
       // Check for saved demo user
@@ -51,6 +53,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           user: savedDemoUser,
           ownerProfile: savedProfile || DEFAULT_DEMO_OWNER,
           isDemoLogin: true,
+          isInitialLoading: false,
           isLoading: false,
         });
         return;
@@ -66,6 +69,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             user: session.user,
             ownerProfile: profile,
             isDemoLogin: false,
+            isInitialLoading: false,
             isLoading: false,
           });
           return;
@@ -76,11 +80,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isOnboarded: onboarded,
         user: null,
         ownerProfile: null,
+        isInitialLoading: false,
         isLoading: false,
       });
     } catch (e) {
       console.warn('Error during initAuth:', e);
-      set({ isLoading: false });
+      set({ isInitialLoading: false, isLoading: false });
     }
   },
 

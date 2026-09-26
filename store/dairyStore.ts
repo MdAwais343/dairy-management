@@ -19,6 +19,33 @@ export const getCurrentYearMonth = (): string => {
   return `${year}-${month}`;
 };
 
+export const shiftDateString = (dateStr: string, daysOffset: number): string => {
+  const parts = dateStr.split('-').map(Number);
+  const year = parts[0];
+  const month = parts[1];
+  const day = parts[2];
+  const d = new Date(year, month - 1, day);
+  d.setDate(d.getDate() + daysOffset);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+};
+
+export const formatUrduDate = (dateStr: string): string => {
+  const parts = dateStr.split('-').map(Number);
+  const year = parts[0];
+  const month = parts[1];
+  const day = parts[2];
+  const d = new Date(year, month - 1, day);
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  };
+  return d.toLocaleDateString('ur-PK', options);
+};
+
 // UUID helper functions
 export const isUUID = (str: string): boolean => {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);

@@ -15,6 +15,9 @@ import { UrduStrings } from '../constants/urduStrings';
 import { useDairyStore } from '../store/dairyStore';
 import { useAuthStore } from '../store/authStore';
 import { DairySplashScreen } from '../components/DairySplashScreen';
+import * as SplashScreen from 'expo-splash-screen';
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Ensure RTL layout support
 try {
@@ -54,22 +57,28 @@ export default function RootLayout() {
     NotoSansArabic_700Bold,
   });
 
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded]);
+
   const fetchInitialData = useDairyStore((state) => state.fetchInitialData);
   const isInitialDataLoaded = useDairyStore((state) => state.isInitialDataLoaded);
   const initAuth = useAuthStore((state) => state.initAuth);
   const isOnboarded = useAuthStore((state) => state.isOnboarded);
   const user = useAuthStore((state) => state.user);
-  const isAuthLoading = useAuthStore((state) => state.isLoading);
+  const isInitialLoading = useAuthStore((state) => state.isInitialLoading);
 
   useEffect(() => {
     initAuth();
     fetchInitialData();
   }, []);
 
-  // App is ready ONLY when fonts are loaded, auth is checked, 2.5s timer passed, AND data is loaded
+  // App is ready ONLY when fonts are loaded, initial auth check done, 2.5s timer passed, AND data is loaded
   const isAppReady =
     fontsLoaded &&
-    !isAuthLoading &&
+    !isInitialLoading &&
     isMinSplashTimeElapsed &&
     (isInitialDataLoaded || isMaxTimeoutElapsed);
 
