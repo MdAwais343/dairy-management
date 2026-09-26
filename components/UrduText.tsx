@@ -29,14 +29,18 @@ export const UrduText: React.FC<UrduTextProps> = ({
     writingDirection: 'rtl',
     color,
     fontSize: size,
-    // Optimal line height and padding to prevent Arabic/Urdu glyph and diacritic clipping
-    lineHeight: Math.round(size * 1.55),
-    includeFontPadding: false,
-    paddingHorizontal: 2,
+    // Generous line height and padding to prevent Arabic/Urdu glyph and diacritic clipping
+    lineHeight: Math.round(size * 1.65),
+    includeFontPadding: true,
+    paddingHorizontal: 8,
   };
 
   return (
-    <Text style={[dynamicStyle, style]} {...rest}>
+    <Text
+      style={[dynamicStyle, style]}
+      textBreakStrategy="simple"
+      {...rest}
+    >
       {children}
     </Text>
   );
