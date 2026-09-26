@@ -15,6 +15,7 @@ import { UrduStrings } from '../constants/urduStrings';
 import { useDairyStore } from '../store/dairyStore';
 import { useAuthStore } from '../store/authStore';
 import { DairySplashScreen } from '../components/DairySplashScreen';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -55,6 +56,8 @@ export default function RootLayout() {
     NotoSansArabic_400Regular,
     NotoSansArabic_500Medium,
     NotoSansArabic_700Bold,
+    ...Ionicons.font,
+    ...MaterialCommunityIcons.font,
   });
 
   useEffect(() => {
