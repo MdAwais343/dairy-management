@@ -17,6 +17,7 @@ export const UrduText: React.FC<UrduTextProps> = ({
   size = 15,
   style,
   children,
+  maxFontSizeMultiplier = 1.25,
   ...rest
 }) => {
   let fontFamily = Typography.fontFamily;
@@ -29,19 +30,25 @@ export const UrduText: React.FC<UrduTextProps> = ({
     writingDirection: 'rtl',
     color,
     fontSize: size,
-    // Generous line height and padding to prevent Arabic/Urdu glyph and diacritic clipping
-    lineHeight: Math.round(size * 1.65),
-    includeFontPadding: true,
-    paddingHorizontal: 8,
+    // Line height to comfortably clear ascenders and descenders
+    lineHeight: Math.round(size * 1.55),
+    includeFontPadding: false,
   };
+
+  // Add non-breaking space padding to cushion outer Urdu glyphs (like Dal/Te) from canvas clipping
+  const content =
+    typeof children === 'string'
+      ? `\u00A0${children}\u00A0`
+      : children;
 
   return (
     <Text
       style={[dynamicStyle, style]}
       textBreakStrategy="simple"
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
       {...rest}
     >
-      {children}
+      {content}
     </Text>
   );
 };

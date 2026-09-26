@@ -88,11 +88,11 @@ export const DairySplashScreen: React.FC = () => {
 
         {/* Main App Title & Tagline in Urdu */}
         <View style={styles.textBlock}>
-          <UrduText size={26} weight="bold" color="#1E3A8A" align="center" style={styles.mainTitle}>
+          <UrduText size={24} weight="bold" color="#1E3A8A" align="center" style={styles.mainTitle}>
             ڈیری مینجمنٹ
           </UrduText>
 
-          <UrduText size={13} weight="medium" color="#047857" align="center" style={styles.subtitle}>
+          <UrduText size={12.5} weight="medium" color="#047857" align="center" style={styles.subtitle}>
             روزانہ دودھ کی نکاسی • ڈیجیٹل کھاتہ • واٹس ایپ بل
           </UrduText>
         </View>
@@ -192,17 +192,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 14,
     marginBottom: 18,
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
   },
   mainTitle: {
-    marginBottom: 6,
-    paddingHorizontal: 12,
+    marginBottom: 4,
     textAlign: 'center',
+    alignSelf: 'center',
   },
   subtitle: {
     opacity: 0.92,
-    paddingHorizontal: 8,
     textAlign: 'center',
+    alignSelf: 'center',
     lineHeight: 22,
     flexWrap: 'wrap',
   },
