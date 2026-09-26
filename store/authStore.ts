@@ -3,6 +3,7 @@ import { DairyOwner, SignUpOwnerData } from '../types/database.types';
 import { authApi, isSupabaseConfigured, supabase } from '../lib/supabase';
 import { storage } from '../lib/storage';
 import { triggerHaptic } from '../lib/haptics';
+import { useDairyStore } from './dairyStore';
 
 interface AuthState {
   isOnboarded: boolean;
@@ -42,8 +43,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isInitialLoading: true });
       const onboarded = await storage.getOnboardingCompleted();
-      
-      // Check for saved demo user
+
+      // 1. Check live Supabase session FIRST (live user session takes strict priority)
+      if (isSupabaseConfigured() && supabase) {
+        const session = await authApi.getSession();
+        if (session?.user) {
+          const profile = await authApi.getOwnerProfile(session.user.id);
+          await storage.setDemoUser(null);
+          if (profile) {
+            await storage.setOwnerProfile(profile);
+          }
+          set({
+            isOnboarded: onboarded,
+            user: session.user,
+            ownerProfile: profile,
+            isDemoLogin: false,
+            isInitialLoading: false,
+            isLoading: false,
+          });
+          return;
+        }
+      }
+
+      // 2. Only if no live Supabase session, check for local demo user
       const savedDemoUser = await storage.getDemoUser();
       const savedProfile = await storage.getOwnerProfile();
 
@@ -59,27 +81,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
-      // Check live Supabase session if configured
-      if (isSupabaseConfigured() && supabase) {
-        const session = await authApi.getSession();
-        if (session?.user) {
-          const profile = await authApi.getOwnerProfile(session.user.id);
-          set({
-            isOnboarded: onboarded,
-            user: session.user,
-            ownerProfile: profile,
-            isDemoLogin: false,
-            isInitialLoading: false,
-            isLoading: false,
-          });
-          return;
-        }
-      }
-
       set({
         isOnboarded: onboarded,
         user: null,
         ownerProfile: null,
+        isDemoLogin: false,
         isInitialLoading: false,
         isLoading: false,
       });
@@ -100,6 +106,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       if (isSupabaseConfigured()) {
         const { user, profile } = await authApi.signInOwner(email, pass);
+        // Clear demo flags from persistent storage
+        await storage.setDemoUser(null);
         await storage.setOwnerProfile(profile);
         triggerHaptic.success();
         set({
@@ -108,6 +116,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isDemoLogin: false,
           isLoading: false,
         });
+        // Immediately fetch live cloud data for the logged-in owner
+        useDairyStore.getState().fetchInitialData();
       } else {
         // Fallback demo login if supabase keys not configured
         await get().demoLogin();
@@ -124,6 +134,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       if (isSupabaseConfigured()) {
         const { user, profile } = await authApi.signUpOwner(data);
+        await storage.setDemoUser(null);
         await storage.setOwnerProfile(profile);
         triggerHaptic.success();
         set({
@@ -132,6 +143,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isDemoLogin: false,
           isLoading: false,
         });
+        // Immediately fetch live cloud data for the newly registered owner
+        useDairyStore.getState().fetchInitialData();
       } else {
         // Demo signup
         const profile: DairyOwner = {

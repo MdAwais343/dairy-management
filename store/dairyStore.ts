@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Customer, DailyPickup, Payment, CustomerLedger, PaymentMode } from '../types/database.types';
 import { api, isSupabaseConfigured } from '../lib/supabase';
 import { triggerHaptic } from '../lib/haptics';
+import { storage } from '../lib/storage';
 
 // Helpers for dates
 export const getTodayDateString = (): string => {
@@ -294,11 +295,14 @@ export const useDairyStore = create<DairyStore>((set, get) => ({
           }
         }
 
+        const savedProfile = await storage.getOwnerProfile();
+        const effectiveCapacity = savedProfile?.default_capacity || settings?.default_capacity || 65.0;
+
         set({
           customers: customers.length > 0 ? customers : INITIAL_DEMO_CUSTOMERS,
           dailyPickups: pickups,
           payments: payments,
-          dailyCapacity: settings?.default_capacity || 65.0,
+          dailyCapacity: Number(effectiveCapacity),
           isDemoMode: false,
           isInitialDataLoaded: true,
         });
