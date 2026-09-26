@@ -4,10 +4,12 @@ import { Colors } from '../constants/theme';
 import { UrduText } from './UrduText';
 import { DairyFarmIllustration } from './DairyFarmIllustration';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export const DairySplashScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const [imageError, setImageError] = useState(false);
@@ -31,7 +33,15 @@ export const DairySplashScreen: React.FC = () => {
   const imageCardHeight = Math.min(SCREEN_HEIGHT * 0.38, 280);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: Math.max(insets.top + 8, 28),
+          paddingBottom: Math.max(insets.bottom + 8, 28),
+        },
+      ]}
+    >
       {/* Background Decorative Rural Ambient Shapes */}
       <View style={styles.topSkyAura} />
       <View style={styles.bottomPastureHill} />

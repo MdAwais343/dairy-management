@@ -3,12 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState } from 'react-native';
 import { Customer, DailyPickup, Payment, DairySettings, DairyOwner, SignUpOwnerData } from '../types/database.types';
 
-// Supabase credentials with production defaults to guarantee connectivity in all builds
-const DEFAULT_SUPABASE_URL = 'https://ipjtxcihgnoxemjrkopj.supabase.co';
-const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwanR4Y2loZ25veGVtanJrb3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNjI0MTcsImV4cCI6MjEwNTkzODQxN30.PHre8JYpbg9SDrZ6jYMKBY0fcF1AAi2mQUjKNJH6J5M';
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_KEY;
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export const isSupabaseConfigured = (): boolean => {
   return Boolean(
@@ -85,6 +81,21 @@ export const authApi = {
       }
     } catch (e) {
       console.warn('Profile upsert exception:', e);
+    }
+
+    // If signup did not automatically activate session, attempt immediate sign-in
+    if (!authData.session) {
+      try {
+        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+        if (!signInErr && signInData?.user) {
+          return { user: signInData.user, profile };
+        }
+      } catch (autoLoginErr) {
+        console.log('Auto sign-in after signup skipped:', autoLoginErr);
+      }
     }
 
     return { user: authData.user, profile };

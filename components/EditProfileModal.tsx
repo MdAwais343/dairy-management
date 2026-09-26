@@ -125,7 +125,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 style={styles.textInput}
                 value={ownerName}
                 onChangeText={setOwnerName}
-                placeholder="مثلاً: چوہدری عابد حسین"
+                placeholder="مثلاً: محمد اویس"
                 placeholderTextColor={Colors.textMuted}
                 textAlign="right"
               />

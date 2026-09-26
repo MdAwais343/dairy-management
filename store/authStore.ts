@@ -25,10 +25,10 @@ interface AuthState {
 
 const DEFAULT_DEMO_OWNER: DairyOwner = {
   id: 'demo-owner-101',
-  farm_name: 'ڈیری مینجمنٹ',
-  owner_name: 'چوہدری عابد حسین',
+  farm_name: 'ڈیری فارم (ڈیمو)',
+  owner_name: 'ڈیمو فارم مالک',
   phone: '03001234567',
-  default_capacity: 65.0,
+  default_capacity: 50.0,
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -218,7 +218,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({
           user: demoUser,
           ownerProfile: profile,
-          isDemoLogin: true,
+          isDemoLogin: false,
           isLoading: false,
         });
       }

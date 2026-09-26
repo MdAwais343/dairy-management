@@ -164,7 +164,7 @@ export default function SignUpScreen() {
             <ShakeableInput
               ref={ownerNameRef}
               label="فارم مالک کا نام"
-              placeholder="مثلاً: چوہدری عابد حسین"
+              placeholder="مثلاً: محمد اویس"
               iconName="person-outline"
               value={ownerName}
               onChangeText={(t) => {

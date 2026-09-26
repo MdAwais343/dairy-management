@@ -106,37 +106,37 @@ export default function RootLayout() {
     }
   }, [isAppReady, isOnboarded, user, segments]);
 
-  if (!isAppReady) {
-    return <DairySplashScreen />;
-  }
-
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: '#F8FAFC' },
-          animation: 'none',
-        }}
-      >
-        <Stack.Screen name="index" options={{ headerShown: false, animation: 'none' }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="customer/[id]"
-          options={{
-            headerShown: true,
-            presentation: 'modal',
-            title: UrduStrings.customers.historyTitle,
-            headerTintColor: Colors.primary,
-            headerTitleStyle: {
-              fontFamily: 'NotoSansArabic_700Bold',
-              fontSize: 17,
-            },
+      {!isAppReady ? (
+        <DairySplashScreen />
+      ) : (
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: '#F8FAFC' },
+            animation: 'none',
           }}
-        />
-      </Stack>
+        >
+          <Stack.Screen name="index" options={{ headerShown: false, animation: 'none' }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="customer/[id]"
+            options={{
+              headerShown: true,
+              presentation: 'modal',
+              title: UrduStrings.customers.historyTitle,
+              headerTintColor: Colors.primary,
+              headerTitleStyle: {
+                fontFamily: 'NotoSansArabic_700Bold',
+                fontSize: 17,
+              },
+            }}
+          />
+        </Stack>
+      )}
     </SafeAreaProvider>
   );
 }

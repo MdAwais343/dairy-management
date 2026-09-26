@@ -137,7 +137,7 @@ export default function FarmProfileScreen() {
                 {ownerProfile?.farm_name || user?.user_metadata?.farm_name || 'ڈیری مینجمنٹ'}
               </UrduText>
               <UrduText size={14} color="#D1FAE5" style={{ marginTop: 2 }}>
-                {ownerProfile?.owner_name || (isDemoLogin ? 'چوہدری عابد حسین' : (user?.user_metadata?.owner_name || user?.email?.split('@')[0] || 'فارم مالک'))}
+                {ownerProfile?.owner_name || user?.user_metadata?.owner_name || (isDemoLogin ? 'ڈیمو فارم مالک' : (user?.email?.split('@')[0] || 'فارم مالک'))}
               </UrduText>
             </View>
           </View>
